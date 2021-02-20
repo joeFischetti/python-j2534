@@ -1,0 +1,46 @@
+from enum import Enum
+
+class Error_ID(Enum):
+
+    ERR_SUCCESS=hex(0x00)
+    STATUS_NOERROR=hex(0x00)
+    ERR_NOT_SUPPORTED=hex(0x01)
+    ERR_INVALID_CHANNEL_ID=hex(0x02)
+    ERR_INVALID_PROTOCOL_ID=hex(0x03)
+    ERR_NULL_PARAMETER=hex(0x04)
+    ERR_INVALID_IOCTL_VALUE=hex(0x05)
+    ERR_INVALID_FLAGS=hex(0x06)
+    ERR_FAILED	=hex(0x07)
+    ERR_DEVICE_NOT_CONNECTED=hex(0x08)
+    ERR_TIMEOUT	=hex(0x09)
+    ERR_INVALID_MSG=hex(0x0A)
+    ERR_INVALID_TIME_INTERVAL=hex(0x0B)
+    ERR_EXCEEDED_LIMIT=hex(0x0C)
+    ERR_INVALID_MSG_ID=hex(0x0D)
+    ERR_DEVICE_IN_USE=hex(0x0E)
+    ERR_INVALID_IOCTL_ID=hex(0x0F)
+    ERR_BUFFER_EMPTY=hex(0x10)
+    ERR_BUFFER_FULL=hex(0x11)
+    ERR_BUFFER_OVERFLOW=hex(0x12)
+    ERR_PIN_INVALID=hex(0x13)
+    ERR_CHANNEL_IN_USE=hex(0x14)
+    ERR_MSG_PROTOCOL_ID=hex(0x15)
+    ERR_INVALID_FILTER_ID=hex(0x16)
+    ERR_NO_FLOW_CONTROL=hex(0x17)
+    ERR_NOT_UNIQUE=hex(0x18)
+    ERR_INVALID_BAUDRATE=hex(0x19)
+    ERR_INVALID_DEVICE_ID=hex(0x1A)
+
+
+class Protocol_ID(Enum):
+
+    J1850VPW = 1
+    J1850PWM = 2
+    ISO9141 = 3
+    ISO14230 = 4
+    CAN = 5
+    ISO15765 = 6
+    SCI_A_ENGINE = 7	# OP2.0: Not supported
+    SCI_A_TRANS = 8	# OP2.0: Not supported
+    SCI_B_ENGINE = 9	# OP2.0: Not supported
+    SCI_B_TRANS = 10	# OP2.0: Not supported
