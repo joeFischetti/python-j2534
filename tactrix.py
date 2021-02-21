@@ -44,3 +44,15 @@ class Protocol_ID(Enum):
     SCI_A_TRANS = 8	# OP2.0: Not supported
     SCI_B_ENGINE = 9	# OP2.0: Not supported
     SCI_B_TRANS = 10	# OP2.0: Not supported
+
+class Filter(Enum):
+    PASS_FILTER = 0x00000001
+    BLOCK_FILTER = 0x00000002
+    FLOW_CONTROL_FILTER = 0x00000003
+
+class TxStatusFlag(Enum):
+    ISO15765_FRAME_PAD = 0x00000040
+    WAIT_P3_MIN_ONLY = 0x00000200
+    SW_CAN_HV_TX = 0x00000400 # OP2.0: Not supported
+    SCI_MODE = 0x00400000 # OP2.0: Not supported
+    SCI_TX_VOLTAGE = 0x00800000 # OP2.0: Not supported
