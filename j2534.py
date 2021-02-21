@@ -20,10 +20,9 @@ class J2534():
     dllPassThruDisconnect  = None
     dllPassThruReadMsgs  = None
     dllPassThruWriteMsgs = None
-    dllPassThruStartPeriodicMsgMsgs = None
-    dllPassThruStopPeriodicMsgMsgs = None
-    
-    
+    dllPassThruStartPeriodicMsg = None
+    dllPassThruStopPeriodicMsg = None
+    dllPassThruReadVersion = None
 
 
     def __init__(self, dllName = "op20pt32.dll", location = "C:/Program Files (x86)/OpenECU/OpenPort 2.0/drivers/openport 2.0/"):
@@ -34,8 +33,9 @@ class J2534():
         global dllPassThruDisconnect 
         global dllPassThruReadMsgs 
         global dllPassThruWriteMsgs
-        global dllPassThruStartPeriodicMsgMsgs
-        global dllPassThruStopPeriodicMsgMsgs
+        global dllPassThruStartPeriodicMsg
+        global dllPassThruStopPeriodicMsg
+        global dllPassThruReadVersion
 
         self.hDLL = ctypes.cdll.LoadLibrary(location + dllName)
 
@@ -106,7 +106,7 @@ class J2534():
             c_ulong)
     
         dllPassThruStartPeriodicMsgParams = (1, "ChannelID", 0), (1, "pMsg", 0), (1, "pMsgID", 0), (1, "TimeInterval", 0)
-        dllPassThruStartPeriodicMsgMsgs = dllPassThruStartPeriodicMsgProto(("PassThruStartPeriodicMsg", self.hDLL), dllPassThruStartPeriodicMsgParams)
+        dllPassThruStartPeriodicMsg = dllPassThruStartPeriodicMsgProto(("PassThruStartPeriodicMsg", self.hDLL), dllPassThruStartPeriodicMsgParams)
     
         dllPassThruStopPeriodicMsgProto = WINFUNCTYPE(
             c_long,
@@ -114,7 +114,19 @@ class J2534():
             c_ulong)
     
         dllPassThruStopPeriodicMsgParams = (1, "ChannelID", 0), (1, "MsgID", 0)
-        dllPassThruStopPeriodicMsgMsgs = dllPassThruStopPeriodicMsgProto(("PassThruStopPeriodicMsg", self.hDLL), dllPassThruStopPeriodicMsgParams)
+        dllPassThruStopPeriodicMsg = dllPassThruStopPeriodicMsgProto(("PassThruStopPeriodicMsg", self.hDLL), dllPassThruStopPeriodicMsgParams)
+
+        
+        dllPassThruReadVersionProto = WINFUNCTYPE(
+            c_long,
+            c_ulong,
+            POINTER(ctypes.c_char_p),
+            POINTER(ctypes.c_char_p),
+            POINTER(ctypes.c_char_p))
+
+        dllPassThruReadVersionParams = (1, "DeviceID", 0), (1, "pFirmwareVersion", 0), (1, "pDllVersion", 0), (1, "pApiVersoin", 0)
+        dllPassThruReadVersion = dllPassThruReadVersionProto(("PassThruReadVersion", self.hDLL), dllPassThruReadVersionParams)
+        
 
     def PassThruOpen(self, pDeviceID = None):
         if not pDeviceID:
@@ -144,10 +156,11 @@ class J2534():
     
     def PassThruReadMsgs(self, ChannelID, pNumMsgs = 1, Timeout = 0):
         pMsg = PASSTHRU_MSG()
+        
         pNumMsgs = c_ulong(pNumMsgs)
     
         result = dllPassThruReadMsgs(ChannelID, byref(pMsg), byref(pNumMsgs), c_ulong(Timeout))
-        return Error_ID(hex(result)), pMsg
+        return Error_ID(hex(result)), pMsg.Data, pNumMsgs
     
     
     def PassThruWriteMsgs(self, ChannelID, Data, pNumMsgs = 1, Timeout = 100):
@@ -175,6 +188,14 @@ class J2534():
     
         return Error_ID(hex(result))
 
+    def PassThruReadVersion(self, DeviceID):
+        pFirmwareVersion = ctypes.c_char_p()
+        pDllVersion = ctypes.c_char_p()
+        pApiVersion = ctypes.c_char_p()
+
+        result = dllPassThruReadVersion(DeviceID, byref(pFirmwareVersion), byref(pDllVersion), byref(pApiVersion))
+        
+        return Error_ID(hex(result)), pFirmwareVersion, pDllVersion, pApiVersion
 
 
 #
@@ -192,11 +213,6 @@ class J2534():
 #    dllPassThruSetProgrammingVoltageProto = WINFUNCTYPE(
 #        c_long,
 #((unsigned long DeviceID, unsigned long Pin, unsigned long Voltage);
-#
-#
-#    dllPassThruReadVersionProto = WINFUNCTYPE(
-#        c_long,
-#((char *pApiVersion,char *pDllVersion,char *pFirmwareVersion,unsigned long DeviceID);
 #
 #
 #    dllPassThruGetLastErrorProto = WINFUNCTYPE(
