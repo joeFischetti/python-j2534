@@ -41,8 +41,30 @@ print()
 data = b'\x22\xf1\x90'
 print("Sending bytes to read vin (0x22 f1 90): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
+result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
 print("    " + result.name)
+print("    " + str(response))
 print()
+
+data = b'\x22\xf1\x91'
+print("Sending bytes to read fake data (0x22 f1 91): " + str(data.hex()))
+result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
+result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
+
+print("    " + result.name)
+print("    " + str(response))
+print()
+
+data = b'\x22\xf1\x92'
+print("Sending bytes to read more fake data (0x22 f1 92): " + str(data.hex()))
+result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
+result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
+
+print("    " + result.name)
+print("    " + str(response))
+print()
+
+
 
 print("Reading data back")
 result, response, numResponse = interface.PassThruReadMsgs(channelID)
