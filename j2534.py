@@ -23,6 +23,7 @@ class J2534():
     dllPassThruStartPeriodicMsg = None
     dllPassThruStopPeriodicMsg = None
     dllPassThruReadVersion = None
+    dllPassThruStartMsgFilter = None
 
 
     def __init__(self, dllName = "op20pt32.dll", location = "C:/Program Files (x86)/OpenECU/OpenPort 2.0/drivers/openport 2.0/"):
@@ -36,6 +37,7 @@ class J2534():
         global dllPassThruStartPeriodicMsg
         global dllPassThruStopPeriodicMsg
         global dllPassThruReadVersion
+        global dllPassThruStartMsgFilter
 
         self.hDLL = ctypes.cdll.LoadLibrary(location + dllName)
 
@@ -126,6 +128,21 @@ class J2534():
 
         dllPassThruReadVersionParams = (1, "DeviceID", 0), (1, "pFirmwareVersion", 0), (1, "pDllVersion", 0), (1, "pApiVersoin", 0)
         dllPassThruReadVersion = dllPassThruReadVersionProto(("PassThruReadVersion", self.hDLL), dllPassThruReadVersionParams)
+
+        dllPassThruStartMsgFilterProto = WINFUNCTYPE(
+            c_long,
+            c_ulong,
+            c_ulong,
+            POINTER(PASSTHRU_MSG),
+            POINTER(PASSTHRU_MSG),
+            POINTER(PASSTHRU_MSG),
+            POINTER(c_ulong)
+        )
+
+        dllPassThruStartMsgFilterParams = (1, "ChannelID", 0), (1, "FilterType", 0), (1, "pMaskMsg", 0), 
+            (1, "pPatternMsg", 0), (1, "pFlowControlMsg", 0), (1, "pMsgID", 0)
+
+        dllPassThruStartMsgFilter = dllPassThruStartMsgFilterProto(("PassThruStartMsgFilter", self.hDLL), dllpassThruStartMsgFilterParams)
         
 
     def PassThruOpen(self, pDeviceID = None):
@@ -196,6 +213,11 @@ class J2534():
         result = dllPassThruReadVersion(DeviceID, byref(pFirmwareVersion), byref(pDllVersion), byref(pApiVersion))
         
         return Error_ID(hex(result)), pFirmwareVersion, pDllVersion, pApiVersion
+
+    def PassThruStartMsgFilter(self, ChannelID):
+        result = dllPassThruStartMsgFilter(ChannelID)
+
+        return Error_ID(hex(result))
 
 
 #
