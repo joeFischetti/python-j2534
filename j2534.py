@@ -81,7 +81,7 @@ class J2534():
         dllPassThruReadMsgsProto = WINFUNCTYPE(
             c_long,
             c_ulong,
-            POINTER(PASSTHRU_MSG),
+            POINTER(ctypes.ARRAY(PASSTHRU_MSG, 10)),
             POINTER(c_ulong),
             c_ulong)
     
@@ -182,15 +182,23 @@ class J2534():
     
     
     def PassThruReadMsgs(self, ChannelID, protocol, pNumMsgs = 1, Timeout = 1000):
-        pMsg = PASSTHRU_MSG()
-        pMsg.ProtocolID = protocol
-        
-        #pNumMsgs = c_ulong(pNumMsgs)
-        pNumMsgs = c_ulong(0)
-        
-        result = dllPassThruReadMsgs(ChannelID, byref(pMsg), byref(pNumMsgs), c_ulong(Timeout))
+        pNumMsgs = 2
+        pMsg = (PASSTHRU_MSG * 10)()
+        for i in range(0, 10):
+            pMsg[i] = PASSTHRU_MSG()
 
-        return Error_ID(hex(result)), bytes(pMsg.Data[4:pMsg.DataSize]), pNumMsgs
+            pMsg.ProtocolID = protocol
+        
+        pNumMsgs = c_ulong(pNumMsgs)
+        
+        #breakpoint()
+        result = dllPassThruReadMsgs(ChannelID, byref(pMsg), byref(pNumMsgs), c_ulong(Timeout))
+        for i in range(0, 10):
+            if pMsg[i].DataSize != 0:
+                print("    Data in return buffer:")
+                print("        " + str(bytes(pMsg[i].Data[0:pMsg[i].DataSize]).hex()))
+
+        return Error_ID(hex(result)), bytes(pMsg[0].Data[0:pMsg[0].DataSize]), pNumMsgs
     
     
     def PassThruWriteMsgs(self, ChannelID, Data, protocol, pNumMsgs = 1, Timeout = 100):
@@ -260,7 +268,7 @@ class J2534():
         msgMask.TxFlags = TxStatusFlag.ISO15765_FRAME_PAD.value
         msgMask.Timestamp = 0;
         msgMask.DataSize = 4;
-        for i in range(0, 4):
+        for i in range(0, 8):
             msgMask.Data[i] = 0xff
 
         msgPattern.ProtocolID = protocol;
@@ -276,8 +284,8 @@ class J2534():
         msgFlow.DataSize = 4;
 
 
-        for i in range(0, len(rxID)):
-            msgFlow.Data[i] = rxID[i]
+        for i in range(0, len(txID)):
+            msgFlow.Data[i] = txID[i]
 
         for i in range(0, len(rxID)):
             msgPattern.Data[i] = rxID[i]
@@ -285,10 +293,6 @@ class J2534():
         msgID = c_ulong(0)
 
         result = dllPassThruStartMsgFilter(ChannelID, c_ulong(Filter.FLOW_CONTROL_FILTER.value), byref(msgMask), byref(msgPattern), byref(msgFlow), byref(msgID))
-        if Error_ID(hex(result)).value != hex(0x0):
-            print("        Error setting filter")
-            return Error_ID(hex(result))
-
 
         for i in range(0, len(rxID)):
             msgFlow.Data[i] = rxID[i]
@@ -296,7 +300,7 @@ class J2534():
         for i in range(0, len(txID)):
             msgPattern.Data[i] = txID[i]
 
-        result = dllPassThruStartMsgFilter(ChannelID, c_ulong(Filter.FLOW_CONTROL_FILTER.value), byref(msgMask), byref(msgPattern), byref(msgFlow), byref(msgID))
+        #result = dllPassThruStartMsgFilter(ChannelID, c_ulong(Filter.FLOW_CONTROL_FILTER.value), byref(msgMask), byref(msgPattern), byref(msgFlow), byref(msgID))
 
 
         return Error_ID(hex(result))
