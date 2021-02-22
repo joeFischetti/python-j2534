@@ -180,11 +180,9 @@ class J2534():
         txmsg.TxFlags = TxStatusFlag.ISO15765_FRAME_PAD.value
         txmsg.ProtocolID = protocol;
 
-        txmsg.Data = Data
-        #for i in range(0, len(Data)):
-        #    txmsg.Data[i] = Data[i]
+        txmsg.Data = bytes([0x00, 0x00, 0x07, 0xE0]) + Data
         
-        txmsg.DataSize = len(Data)
+        txmsg.DataSize = len(Data) + 4
     
         result = dllPassThruWriteMsgs(ChannelID, byref(txmsg), byref(c_ulong(pNumMsgs)), c_ulong(Timeout))
         return Error_ID(hex(result))
