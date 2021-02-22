@@ -118,9 +118,9 @@ class J2534():
         dllPassThruReadVersionProto = WINFUNCTYPE(
             c_long,
             c_ulong,
-            POINTER(ctypes.c_char_p),
-            POINTER(ctypes.c_char_p),
-            POINTER(ctypes.c_char_p))
+            POINTER(ctypes.c_char),
+            POINTER(ctypes.c_char),
+            POINTER(ctypes.c_char))
 
         dllPassThruReadVersionParams = (1, "DeviceID", 0), (1, "pFirmwareVersion", 0), (1, "pDllVersion", 0), (1, "pApiVersoin", 0)
         dllPassThruReadVersion = dllPassThruReadVersionProto(("PassThruReadVersion", self.hDLL), dllPassThruReadVersionParams)
@@ -142,9 +142,9 @@ class J2534():
 
     def PassThruOpen(self, pDeviceID = None):
         if not pDeviceID:
-            pDeviceID = POINTER(c_ulong)()
+            pDeviceID = ctypes.c_ulong()
     
-        result = dllPassThruOpen(POINTER(ctypes.c_int)(), pDeviceID)
+        result = dllPassThruOpen(byref(ctypes.c_int()), byref(pDeviceID))
         return Error_ID(hex(result)), pDeviceID
     
     
@@ -205,11 +205,10 @@ class J2534():
         return Error_ID(hex(result))
 
     def PassThruReadVersion(self, DeviceID):
-        pFirmwareVersion = ctypes.c_char_p()
-        pDllVersion = ctypes.c_char_p()
-        pApiVersion = ctypes.c_char_p()
-
-        result = dllPassThruReadVersion(DeviceID, byref(pFirmwareVersion), byref(pDllVersion), byref(pApiVersion))
+        pFirmwareVersion = (ctypes.c_char * 80)()
+        pDllVersion = (ctypes.c_char * 80)()
+        pApiVersion = (ctypes.c_char * 80)()
+        result = dllPassThruReadVersion(DeviceID, pFirmwareVersion, pDllVersion, pApiVersion)
         
         return Error_ID(hex(result)), pFirmwareVersion, pDllVersion, pApiVersion
 

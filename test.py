@@ -16,8 +16,8 @@ print("    " + result.name)
 print()
 
 
-if result.value != 0:
-    devID = 12345678
+#if result.value != 0:
+#    devID = 12345678
 
 print("Getting device information")
 result, firmwareVersion, dllVersion, apiVersion = interface.PassThruReadVersion(devID)
