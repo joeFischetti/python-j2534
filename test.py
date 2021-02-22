@@ -47,7 +47,7 @@ print("    " + str(response))
 print()
 
 data = b'\x22\xf1\x91'
-print("Sending bytes to read fake data (0x22 f1 91): " + str(data.hex()))
+print("Sending bytes to read ECU Hardware Number (0x22 f1 91): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
 
@@ -55,8 +55,8 @@ print("    " + result.name)
 print("    " + str(response))
 print()
 
-data = b'\x22\xf1\x92'
-print("Sending bytes to read more fake data (0x22 f1 92): " + str(data.hex()))
+data = b'\x22\xf1\x89'
+print("Sending bytes to read ASW Version number (0x22 f1 89): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
 
