@@ -185,7 +185,8 @@ class J2534():
         pMsg = PASSTHRU_MSG()
         pMsg.ProtocolID = protocol
         
-        pNumMsgs = c_ulong(pNumMsgs)
+        #pNumMsgs = c_ulong(pNumMsgs)
+        pNumMsgs = c_ulong(0)
         
         result = dllPassThruReadMsgs(ChannelID, byref(pMsg), byref(pNumMsgs), c_ulong(Timeout))
 

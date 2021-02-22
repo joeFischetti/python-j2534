@@ -43,6 +43,12 @@ result = interface.PassThruIoctl(channelID, Ioctl_ID.CLEAR_RX_BUFFER)
 print("    " + result.name)
 print()
 
+print("Reading buffer (since it should be empty)")
+result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
+print("    " + result.name)
+print("    " + str(response))
+print()
+
 data = b'\x10\x03'
 print("Sending bytes to switch to extended diag: " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
@@ -52,27 +58,27 @@ print()
 data = b'\x22\xf1\x90'
 print("Sending bytes to read vin (0x22 f1 90): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
-print("    " + result.name)
+print("    Transmit: " + result.name)
 result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
-print("    " + result.name)
+print("    Receive:  " + result.name)
 print("    " + str(response))
 print()
 
 data = b'\x22\xf1\x91'
 print("Sending bytes to read ECU Hardware Number (0x22 f1 91): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
+print("    Transmit: " + result.name)
 result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
-
-print("    " + result.name)
+print("    Receive:  " + result.name)
 print("    " + str(response))
 print()
 
 data = b'\x22\xf1\x89'
 print("Sending bytes to read ASW Version number (0x22 f1 89): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
+print("    Transmit: " + result.name)
 result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
-
-print("    " + result.name)
+print("    Receive:  " + result.name)
 print("    " + str(response))
 print()
 
