@@ -51,8 +51,22 @@ print()
 #print("    " + str(response))
 #print()
 
-data = b'\x10\x03'
-print("Sending bytes to switch to extended diag: " + str(data.hex()))
+data = b'\x01\x0C'
+print("Sending bytes to Get current engine speed: " + str(data.hex()))
+result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
+#result = interface.PassThruIoctl(channelID, Ioctl_ID.CLEAR_RX_BUFFER)
+print("    Transmit: " + result.name)
+response = None
+while response == None:
+    result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
+    
+print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value))
+print("    Response: " + str(response.hex()))
+print()
+
+
+data = b'\x01\x0a'
+print("Sending bytes to read Fuel pressure (0x01 0a): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 #result = interface.PassThruIoctl(channelID, Ioctl_ID.CLEAR_RX_BUFFER)
 print("    Transmit: " + result.name)
@@ -63,21 +77,8 @@ print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value
 print("    Response: " + str(response.hex()))
 print()
 
-
-data = b'\x22\xf1\x90'
-print("Sending bytes to read vin (0x22 f1 90): " + str(data.hex()))
-result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
-#result = interface.PassThruIoctl(channelID, Ioctl_ID.CLEAR_RX_BUFFER)
-print("    Transmit: " + result.name)
-response = None
-while response == None:
-    result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
-print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value))
-print("    Response: " + str(response.hex()))
-print()
-
-data = b'\x22\xf1\x91'
-print("Sending bytes to read ECU Hardware Number (0x22 f1 91): " + str(data.hex()))
+data = b'\x01\x13'
+print("Sending bytes to read O2 sensors (0x01 13): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 #result = interface.PassThruIoctl(channelID, Ioctl_ID.CLEAR_RX_BUFFER)
 response = None
@@ -87,18 +88,6 @@ while response == None:
 print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value))
 print("    Response: " + str(response.hex()))
 print()
-
-data = b'\x22\xf1\x89'
-print("Sending bytes to read ASW Version number (0x22 f1 89): " + str(data.hex()))
-result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
-print("    Transmit: " + result.name)
-response = None
-while response == None:
-    result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
-print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value))
-print("    Response: " + str(response.hex()))
-print()
-
 
 
 print("Disconnecting from pass through device")

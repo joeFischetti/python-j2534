@@ -200,7 +200,11 @@ class J2534():
         txmsg.TxFlags = TxStatusFlag.ISO15765_FRAME_PAD.value
         txmsg.ProtocolID = protocol;
 
-        Data = b'\x00\x00\x07\xE0' + Data
+        #VW Testing:
+        #Data = b'\x00\x00\x07\xE0' + Data
+
+        #Generic OBD2 testing:
+        Data = b'\x00\x00\x07\x00' + Data
 
         for i in range(0, len(Data)):
             txmsg.Data[i] = Data[i]
@@ -241,7 +245,13 @@ class J2534():
         return Error_ID(hex(result))
 
     def PassThruStartMsgFilter(self, ChannelID, protocol):
-        txID = bytes([0x00, 0x00, 0x07, 0xE0])
+        
+        #VW Testing
+        #txID = bytes([0x00, 0x00, 0x07, 0xE0])
+
+        #Generic OBD2 testing
+        txID = bytes([0x00, 0x00, 0x07, 0x00])
+        
         rxID = bytes([0x00, 0x00, 0x07, 0xE8])
         
 
@@ -278,8 +288,8 @@ class J2534():
         msgFlow.DataSize = 4;
 
 
-        for i in range(0, len(txID)):
-            msgFlow.Data[i] = txID[i]
+        for i in range(0, len(rxID)):
+            msgFlow.Data[i] = rxID[i]
 
         for i in range(0, len(rxID)):
             msgPattern.Data[i] = rxID[i]
