@@ -47,9 +47,6 @@ data = b'\x10\x03'
 print("Sending bytes to switch to extended diag: " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 print("    " + result.name)
-result, response, numMessages = interface.PassThruReadMsgs(channelID, 1, 10)
-print("    " + result.name)
-print("    " + str(response))
 print()
 
 data = b'\x22\xf1\x90'
