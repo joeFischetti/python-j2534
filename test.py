@@ -32,9 +32,6 @@ result, channelID = interface.PassThruConnect(devID, protocol.value, baudrate)
 print("    " + result.name)
 print()
 
-if result.value != 0:
-    channelID = 1
-
 print("Setting up a flow contorl filter for ISO15765")
 result = interface.PassThruStartMsgFilter(channelID, protocol.value)
 print("    " + result.name)
@@ -43,7 +40,7 @@ print()
 
 data = b'\x22\xf1\x90'
 print("Sending bytes to read vin (0x22 f1 90): " + str(data.hex()))
-result = interface.PassThruWriteMsgs(channelID, data)
+result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 print("    " + result.name)
 print()
 
