@@ -56,7 +56,9 @@ print("Sending bytes to switch to extended diag: " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 #result = interface.PassThruIoctl(channelID, Ioctl_ID.CLEAR_RX_BUFFER)
 print("    Transmit: " + result.name)
-result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
+response = None
+while response == None:
+    result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
 print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value))
 print("    Response: " + str(response.hex()))
 print()
@@ -67,7 +69,9 @@ print("Sending bytes to read vin (0x22 f1 90): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 #result = interface.PassThruIoctl(channelID, Ioctl_ID.CLEAR_RX_BUFFER)
 print("    Transmit: " + result.name)
-result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
+response = None
+while response == None:
+    result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
 print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value))
 print("    Response: " + str(response.hex()))
 print()
@@ -76,8 +80,10 @@ data = b'\x22\xf1\x91'
 print("Sending bytes to read ECU Hardware Number (0x22 f1 91): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 #result = interface.PassThruIoctl(channelID, Ioctl_ID.CLEAR_RX_BUFFER)
+response = None
 print("    Transmit: " + result.name)
-result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
+while response == None:
+    result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
 print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value))
 print("    Response: " + str(response.hex()))
 print()
@@ -86,7 +92,9 @@ data = b'\x22\xf1\x89'
 print("Sending bytes to read ASW Version number (0x22 f1 89): " + str(data.hex()))
 result = interface.PassThruWriteMsgs(channelID, data, protocol.value)
 print("    Transmit: " + result.name)
-result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
+response = None
+while response == None:
+    result, response, numMessages = interface.PassThruReadMsgs(channelID, protocol.value, 1, 10)
 print("    Receive: " + result.name + ", Num Messages: " + str(numMessages.value))
 print("    Response: " + str(response.hex()))
 print()
