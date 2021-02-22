@@ -81,7 +81,7 @@ class J2534():
         dllPassThruReadMsgsProto = WINFUNCTYPE(
             c_long,
             c_ulong,
-            POINTER(ctypes.ARRAY(PASSTHRU_MSG, 2)),
+            POINTER(PASSTHRU_MSG),
             POINTER(c_ulong),
             c_ulong)
     
@@ -182,31 +182,17 @@ class J2534():
     
     
     def PassThruReadMsgs(self, ChannelID, protocol, pNumMsgs = 1, Timeout = 1000):
-        pNumMsgs = 2
-        pMsg = (PASSTHRU_MSG * 2)()
-        for i in range(0, 2):
-            pMsg[i] = PASSTHRU_MSG()
-
-            pMsg.ProtocolID = protocol
+        pMsg = PASSTHRU_MSG()
+        pMsg.ProtocolID = protocol
         
         pNumMsgs = c_ulong(pNumMsgs)
         
-        #breakpoint()
-        result = dllPassThruReadMsgs(ChannelID, byref(pMsg), byref(pNumMsgs), c_ulong(Timeout))
-
-        if pNumMsgs.value == 0:
-            return Error_ID(hex(result)), bytes(pMsg[0].Data[0:pMsg[0].DataSize]), pNumMsgs
-
-        for i in range(0, pNumMsgs.value):
-            if pMsg[i].DataSize != 0:
-                print("    Data in return buffer:")
-                print("        " + str(bytes(pMsg[i].Data[0:pMsg[i].DataSize]).hex()))
-                print("        rxStatus: " + str(pMsg[i].RxStatus))
-
-            if pMsg[i].RxStatus == 0x00:
-                return Error_ID(hex(result)), bytes(pMsg[i].Data[0:pMsg[i].DataSize]), pNumMsgs
-
-        return Error_ID(hex(result)), bytes(pMsg[0].Data[0:pMsg[0].DataSize]), pNumMsgs
+        while 1:
+            result = dllPassThruReadMsgs(ChannelID, byref(pMsg), byref(pNumMsgs), c_ulong(Timeout))
+            if pNumMsgs.value == 0:
+                return None, None, 0
+            elif pMsg.RxStatus == 0:
+                return Error_ID(hex(result)), bytes(pMsg.Data[0:pMsg.DataSize]), pNumMsgs
     
     
     def PassThruWriteMsgs(self, ChannelID, Data, protocol, pNumMsgs = 1, Timeout = 100):
