@@ -4,6 +4,7 @@ from ctypes import Structure, WINFUNCTYPE, POINTER, cast, c_long, c_void_p, c_ul
 import pprint
 from enum import Enum
 
+import logging
 
 class PASSTHRU_MSG(Structure):
     _fields_ = [("ProtocolID", c_ulong),
@@ -13,6 +14,14 @@ class PASSTHRU_MSG(Structure):
         ("DataSize", c_ulong),
         ("ExtraDataindex", c_ulong),
         ("Data", ctypes.c_ubyte * 4128)]
+
+class SCONFIG(Structure):
+    _fields_ = [("Parameter", c_ulong),
+        ("Value", c_ulong)]
+
+class SCONFIG_LIST(Structure):
+    _fields_ = [("NumOfParams", c_ulong),
+        ("ConfigPtr", POINTER(SCONFIG))]
 
 class J2534():
     dllPassThruOpen = None 
@@ -43,6 +52,8 @@ class J2534():
         global dllPassThruIoctl
 
         self.hDLL = ctypes.cdll.LoadLibrary(location + dllName)
+
+        self.logger = logging.getLogger()
 
         dllPassThruOpenProto = WINFUNCTYPE(
             c_long,
@@ -181,30 +192,33 @@ class J2534():
         return Error_ID(hex(result))
     
     
-    def PassThruReadMsgs(self, ChannelID, protocol, pNumMsgs = 1, Timeout = 1000):
+    def PassThruReadMsgs(self, ChannelID, protocol, pNumMsgs = 1, Timeout = 100):
         pMsg = PASSTHRU_MSG()
         pMsg.ProtocolID = protocol
         
         pNumMsgs = c_ulong(pNumMsgs)
         
         while 1:
+            #breakpoint()
             result = dllPassThruReadMsgs(ChannelID, byref(pMsg), byref(pNumMsgs), c_ulong(Timeout))
-            if pNumMsgs.value == 0:
+            if Error_ID(hex(result)) == Error_ID.ERR_BUFFER_EMPTY or pNumMsgs == 0:
                 return None, None, 0
             elif pMsg.RxStatus == 0:
-                return Error_ID(hex(result)), bytes(pMsg.Data[0:pMsg.DataSize]), pNumMsgs
+                return Error_ID(hex(result)), bytes(pMsg.Data[4:pMsg.DataSize]), pNumMsgs
+            #else:
+            #    self.logger.debug("No valid response received: " + str(pMsg.RxStatus) + " - " + str(bytes(pMsg.Data[0:pMsg.DataSize])))
     
     
-    def PassThruWriteMsgs(self, ChannelID, Data, protocol, pNumMsgs = 1, Timeout = 100):
+    def PassThruWriteMsgs(self, ChannelID, Data, protocol, pNumMsgs = 1, Timeout = 1000):
         txmsg = PASSTHRU_MSG()
         txmsg.TxFlags = TxStatusFlag.ISO15765_FRAME_PAD.value
         txmsg.ProtocolID = protocol;
 
         #VW Testing:
-        #Data = b'\x00\x00\x07\xE0' + Data
+        Data = b'\x00\x00\x07\xE0' + Data
 
         #Generic OBD2 testing:
-        Data = b'\x00\x00\x07\x00' + Data
+        #Data = b'\x00\x00\x07\x00' + Data
 
         for i in range(0, len(Data)):
             txmsg.Data[i] = Data[i]
@@ -213,6 +227,7 @@ class J2534():
 
     
         result = dllPassThruWriteMsgs(ChannelID, byref(txmsg), byref(c_ulong(pNumMsgs)), c_ulong(Timeout))
+        #self.logger.debug("Sent data, received response" + str(Error_ID(hex(result))))
         return Error_ID(hex(result))
     
     
@@ -239,18 +254,25 @@ class J2534():
         
         return Error_ID(hex(result)), pFirmwareVersion, pDllVersion, pApiVersion
 
-    def PassThruIoctl(self, Handle, IoctlID):
-        result = dllPassThruIoctl(Handle, c_ulong(IoctlID.value), POINTER(c_ulong)(), POINTER(c_ulong)())
+    def PassThruIoctl(self, Handle, IoctlID, pInput = None, pOutput = None):
+
+        if pInput is None:
+            pInput = POINTER(c_ulong)()
+        if pOutput is None:
+            pOutput = POINTER(c_ulong)()
+
+
+        result = dllPassThruIoctl(Handle, c_ulong(IoctlID.value), byref(pInput), byref(pOutput))
 
         return Error_ID(hex(result))
 
     def PassThruStartMsgFilter(self, ChannelID, protocol):
         
         #VW Testing
-        #txID = bytes([0x00, 0x00, 0x07, 0xE0])
+        txID = bytes([0x00, 0x00, 0x07, 0xE0])
 
         #Generic OBD2 testing
-        txID = bytes([0x00, 0x00, 0x07, 0x00])
+        #txID = bytes([0x00, 0x00, 0x07, 0x00])
         
         rxID = bytes([0x00, 0x00, 0x07, 0xE8])
         
@@ -370,4 +392,6 @@ class TxStatusFlag(Enum):
     SCI_TX_VOLTAGE = 0x00800000 # OP2.0: Not supported
 
 class Ioctl_ID(Enum):
+    GET_CONFIG = 0x01
+    SET_CONFIG = 0x02
     CLEAR_RX_BUFFER = 0x08
