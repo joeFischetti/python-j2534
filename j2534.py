@@ -81,7 +81,7 @@ class J2534():
         dllPassThruReadMsgsProto = WINFUNCTYPE(
             c_long,
             c_ulong,
-            POINTER(ctypes.ARRAY(PASSTHRU_MSG, 10)),
+            POINTER(ctypes.ARRAY(PASSTHRU_MSG, 2)),
             POINTER(c_ulong),
             c_ulong)
     
@@ -183,8 +183,8 @@ class J2534():
     
     def PassThruReadMsgs(self, ChannelID, protocol, pNumMsgs = 1, Timeout = 1000):
         pNumMsgs = 2
-        pMsg = (PASSTHRU_MSG * 10)()
-        for i in range(0, 10):
+        pMsg = (PASSTHRU_MSG * 2)()
+        for i in range(0, 2):
             pMsg[i] = PASSTHRU_MSG()
 
             pMsg.ProtocolID = protocol
@@ -193,10 +193,18 @@ class J2534():
         
         #breakpoint()
         result = dllPassThruReadMsgs(ChannelID, byref(pMsg), byref(pNumMsgs), c_ulong(Timeout))
-        for i in range(0, 10):
+
+        if pNumMsgs.value == 0:
+            return Error_ID(hex(result)), bytes(pMsg[0].Data[0:pMsg[0].DataSize]), pNumMsgs
+
+        for i in range(0, pNumMsgs.value):
             if pMsg[i].DataSize != 0:
                 print("    Data in return buffer:")
                 print("        " + str(bytes(pMsg[i].Data[0:pMsg[i].DataSize]).hex()))
+                print("        rxStatus: " + str(pMsg[i].RxStatus))
+
+            if pMsg[i].RxStatus == 0x00:
+                return Error_ID(hex(result)), bytes(pMsg[i].Data[0:pMsg[i].DataSize]), pNumMsgs
 
         return Error_ID(hex(result)), bytes(pMsg[0].Data[0:pMsg[0].DataSize]), pNumMsgs
     
@@ -268,7 +276,7 @@ class J2534():
         msgMask.TxFlags = TxStatusFlag.ISO15765_FRAME_PAD.value
         msgMask.Timestamp = 0;
         msgMask.DataSize = 4;
-        for i in range(0, 8):
+        for i in range(0, 4):
             msgMask.Data[i] = 0xff
 
         msgPattern.ProtocolID = protocol;
