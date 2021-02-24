@@ -36,7 +36,7 @@ class J2534Connection(BaseConnection):
     :type kwargs: dict
 
     """
-    def __init__(self, windll, rxid, txid, name=None, tpsock=None, *args, **kwargs):
+    def __init__(self, windll, rxid, txid, name=None, *args, **kwargs):
 
         BaseConnection.__init__(self, name)
 
@@ -57,7 +57,7 @@ class J2534Connection(BaseConnection):
         #get the channel ID of the interface (used for subsequent communication)
         self.result, self.channelID = self.interface.PassThruConnect(self.devID, self.protocol.value, self.baudrate)
 
-        #Set the filters and clear the read buffer (filters will be set based on tx/rxid's)
+        #Set the filters and clear the read buffer (filters will be set based on tx/rxids)
         self.result = self.interface.PassThruStartMsgFilter(self.channelID, self.protocol.value)
         self.result = self.interface.PassThruIoctl(self.channelID, Ioctl_ID.CLEAR_RX_BUFFER)
 
@@ -67,13 +67,15 @@ class J2534Connection(BaseConnection):
         self.opened = False
 
 
+
+
     def open(self):
         self.exit_requested = False
         self.rxthread = threading.Thread(target=self.rxthread_task)
         self.rxthread.daemon = True
         self.rxthread.start()
         self.opened = True
-        self.logger.info('Connection opened')
+        self.logger.critical('Connection opened')
         return self
 
     def __enter__(self):
@@ -83,7 +85,7 @@ class J2534Connection(BaseConnection):
         self.close()
 
     def is_open(self):
-        return self.tpsock.bound
+        return self.opened
 
     def rxthread_task(self):
         
