@@ -37,7 +37,7 @@ class J2534():
     dllPassThruIoctl = None
 
 
-    def __init__(self, dllName = "op20pt32.dll", location = "C:/Program Files (x86)/OpenECU/OpenPort 2.0/drivers/openport 2.0/"):
+    def __init__(self, windll, rxid, txid):
 
         global dllPassThruOpen 
         global dllPassThruClose
@@ -51,7 +51,9 @@ class J2534():
         global dllPassThruStartMsgFilter
         global dllPassThruIoctl
 
-        self.hDLL = ctypes.cdll.LoadLibrary(location + dllName)
+        self.hDLL = ctypes.cdll.LoadLibrary(windll)
+        self.rxid = rxid.to_bytes(4, 'big')
+        self.txid = txid.to_bytes(4, 'big')
 
         self.logger = logging.getLogger()
 
@@ -215,10 +217,12 @@ class J2534():
         txmsg.ProtocolID = protocol;
 
         #VW Testing:
-        Data = b'\x00\x00\x07\xE0' + Data
+        #Data = b'\x00\x00\x07\xE0' + Data
 
         #Generic OBD2 testing:
         #Data = b'\x00\x00\x07\x00' + Data
+
+        Data = self.txid + Data
 
         for i in range(0, len(Data)):
             txmsg.Data[i] = Data[i]
@@ -269,12 +273,12 @@ class J2534():
     def PassThruStartMsgFilter(self, ChannelID, protocol):
         
         #VW Testing
-        txID = bytes([0x00, 0x00, 0x07, 0xE0])
+        #txID = bytes([0x00, 0x00, 0x07, 0xE0])
 
         #Generic OBD2 testing
         #txID = bytes([0x00, 0x00, 0x07, 0x00])
         
-        rxID = bytes([0x00, 0x00, 0x07, 0xE8])
+        #rxID = bytes([0x00, 0x00, 0x07, 0xE8])
         
 
         txmsg = PASSTHRU_MSG()
@@ -310,21 +314,21 @@ class J2534():
         msgFlow.DataSize = 4;
 
 
-        for i in range(0, len(rxID)):
-            msgFlow.Data[i] = rxID[i]
+        for i in range(0, len(self.rxid)):
+            msgFlow.Data[i] = self.rxid[i]
 
-        for i in range(0, len(rxID)):
-            msgPattern.Data[i] = rxID[i]
+        for i in range(0, len(self.rxid)):
+            msgPattern.Data[i] = self.rxid[i]
         
         msgID = c_ulong(0)
 
         result = dllPassThruStartMsgFilter(ChannelID, c_ulong(Filter.FLOW_CONTROL_FILTER.value), byref(msgMask), byref(msgPattern), byref(msgFlow), byref(msgID))
 
-        for i in range(0, len(rxID)):
-            msgFlow.Data[i] = rxID[i]
+        for i in range(0, len(self.rxid)):
+            msgFlow.Data[i] = self.rxid[i]
 
-        for i in range(0, len(txID)):
-            msgPattern.Data[i] = txID[i]
+        for i in range(0, len(self.txid)):
+            msgPattern.Data[i] = self.txid[i]
 
         #result = dllPassThruStartMsgFilter(ChannelID, c_ulong(Filter.FLOW_CONTROL_FILTER.value), byref(msgMask), byref(msgPattern), byref(msgFlow), byref(msgID))
 
