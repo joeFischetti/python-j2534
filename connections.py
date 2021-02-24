@@ -5,13 +5,10 @@ import queue
 import threading
 import logging
 
-try:
-    from j2534 import J2534
-    from j2534 import Protocol_ID
-    from j2534 import Ioctl_ID
-    _import_j2534_err = None
-except Exception as e:
-    _import_j2534_err = e
+from j2534 import J2534
+from j2534 import Protocol_ID
+from j2534 import Ioctl_ID
+
 
 
 
@@ -75,7 +72,7 @@ class J2534Connection(BaseConnection):
         self.rxthread.daemon = True
         self.rxthread.start()
         self.opened = True
-        self.logger.critical('Connection opened')
+        self.logger.critical('J2534 Connection opened')
         return self
 
     def __enter__(self):
@@ -92,12 +89,12 @@ class J2534Connection(BaseConnection):
         while not self.exit_requested:
             
             try:
-                result, data, numMessages = self.interface.PassThruReadMsgs(self.channelID, self.protocol.value, 1, 500)
+                result, data, numMessages = self.interface.PassThruReadMsgs(self.channelID, self.protocol.value, 1, 100)
                 
                 if data is not None:
                     self.rxqueue.put(data)
             except Exception:
-                self.logger.critical("Exiting rx thread")
+                self.logger.critical("Exiting J2534 rx thread")
                 self.exit_requested = True
 
 
@@ -106,14 +103,14 @@ class J2534Connection(BaseConnection):
         self.rxthread.join()
         result = self.interface.PassThruDisconnect(self.channelID)
         self.opened = False
-        self.logger.info('Connection closed')
+        self.logger.info('J2534 Connection closed')
 
     def specific_send(self, payload):
         result = self.interface.PassThruWriteMsgs(self.channelID, payload, self.protocol.value)
 
-    def specific_wait_frame(self, timeout=2):
+    def specific_wait_frame(self, timeout=4):
         if not self.opened:
-            raise RuntimeError("Connection is not open")
+            raise RuntimeError("J2534 Connection is not open")
 
         timedout = False
         frame = None
