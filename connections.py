@@ -13,6 +13,7 @@ from j2534 import Ioctl_Parameters
 from j2534 import SCONFIG
 from j2534 import Error_ID
 
+
 import ctypes
 
 
