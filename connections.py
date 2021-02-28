@@ -90,7 +90,6 @@ class J2534Connection(BaseConnection):
         self.logger.info("Resetting cable/filter with Txid: " + str(hex(self.txid)))
         self.logger.info("Resetting cable/filter with rxid: " + str(hex(self.rxid)))
 
-
         self.result = self.interface.PassThruStartMsgFilter(self.channelID, self.protocol.value)
         self.result = self.interface.PassThruIoctl(self.channelID, Ioctl_ID.CLEAR_RX_BUFFER)
 
