@@ -48,7 +48,7 @@ class J2534Connection(BaseConnection):
         self.interface = J2534(windll = windll, rxid = rxid, txid = txid)
 
         #Set the protocol to ISO15765, Baud rate to 500000
-        self.protocol = Protocol_ID.ISO15765
+        self.protocol = Protocol_ID.CAN
         self.baudrate = 500000
 
         #Open the interface (connect to the DLL)
