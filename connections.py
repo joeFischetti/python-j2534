@@ -5,14 +5,13 @@ import queue
 import threading
 import logging
 
-from j2534 import J2534
-from j2534 import Protocol_ID
-from j2534 import Ioctl_ID
-from j2534 import Ioctl_Flags
-from j2534 import Ioctl_Parameters
-from j2534 import SCONFIG
-from j2534 import Error_ID
-
+from .j2534 import J2534
+from .j2534 import Protocol_ID
+from .j2534 import Ioctl_ID
+from .j2534 import Ioctl_Flags
+from .j2534 import Ioctl_Parameters
+from .j2534 import SCONFIG
+from .j2534 import Error_ID
 
 import ctypes
 
@@ -38,7 +37,7 @@ class J2534Connection(BaseConnection):
     :type kwargs: dict
 
     """
-    def __init__(self, windll, rxid, txid, name=None, debug = False, *args, **kwargs):
+    def __init__(self, windll, rxid, txid, name=None, debug = False, sniff = False, *args, **kwargs):
 
         BaseConnection.__init__(self, name)
         self.txid = txid
@@ -64,23 +63,36 @@ class J2534Connection(BaseConnection):
         self.result, self.firmwareVersion, self.dllVersion, self.apiVersion = self.interface.PassThruReadVersion(self.devID)
         self.logger.info("J2534 FirmwareVersion: " + str(self.firmwareVersion.value) + ", dllVersoin: " + str(self.dllVersion.value) + ", apiVersion" + str(self.apiVersion.value))
 
-        #get the channel ID of the interface (used for subsequent communication)
-        self.result, self.channelID = self.interface.PassThruConnect(self.devID, self.protocol.value, self.baudrate)
+        if sniff:
+            flags = 0x10000000|0x00000800
+            #get the channel ID of the interface (used for subsequent communication)
+            self.result, self.channelID = self.interface.PassThruConnect(self.devID, self.protocol.value, self.baudrate, Flags = flags)
 
-        #Set the filters and clear the read buffer (filters will be set based on tx/rxids)
-        self.result = self.interface.PassThruStartMsgFilter(self.channelID, self.protocol.value)
-        self.result = self.interface.PassThruIoctl(self.channelID, Ioctl_ID.CLEAR_RX_BUFFER)
-        
-        
-        stmin = SCONFIG()
-        stmin.Parameter = Ioctl_Parameters.ISO15765_STMIN.value
-        stmin.Value = ctypes.c_ulong(0xF3)
-        self.result = self.interface.PassThruIoctl(Handle = self.channelID, IoctlID = Ioctl_ID.SET_CONFIG, ioctlInput = stmin)
-
-        if self.result == Error_ID.ERR_SUCCESS:
-            self.logger.info("Set ISO15665_STMIN to 0xF3")
         else:
-            self.logger.info("Failed to set ISO15765_STMIN to 0xF3")
+            flags = 0
+
+            #get the channel ID of the interface (used for subsequent communication)
+            self.result, self.channelID = self.interface.PassThruConnect(self.devID, self.protocol.value, self.baudrate, Flags = flags)
+    
+            #Set the filters and clear the read buffer (filters will be set based on tx/rxids)
+            self.result = self.interface.PassThruStartMsgFilter(self.channelID, self.protocol.value)
+            self.result = self.interface.PassThruIoctl(self.channelID, Ioctl_ID.CLEAR_RX_BUFFER)
+        
+        
+            stmin = SCONFIG()
+            stmin.Parameter = Ioctl_Parameters.ISO15765_STMIN.value
+            stmin.Value = ctypes.c_ulong(0xF8)
+            self.result = self.interface.PassThruIoctl(Handle = self.channelID, IoctlID = Ioctl_ID.SET_CONFIG, ioctlInput = stmin)
+
+            if self.result == Error_ID.ERR_SUCCESS:
+                self.logger.info("Set ISO15665_STMIN to 0xF8")
+            else:
+                self.logger.info("Failed to set ISO15765_STMIN to 0xF8")
+    
+            blocksize = SCONFIG()
+            blocksize.Parameter = Ioctl_Parameters.ISO15765_BS.value
+            stmin.Value = ctypes.c_ulong(0)
+            self.result = self.interface.PassThruIoctl(Handle = self.channelID, IoctlID = Ioctl_ID.GET_CONFIG, ioctlInput = blocksize)
 
         self.rxqueue = queue.Queue()
         self.exit_requested = False
@@ -161,7 +173,7 @@ class J2534Connection(BaseConnection):
 
 class FakeConnection(BaseConnection):
 
-    def __init__(self, name=None, debug = False, *args, **kwargs):
+    def __init__(self, name=None, debug = False, testdata = None, *args, **kwargs):
 
         BaseConnection.__init__(self, name)
 
@@ -170,16 +182,8 @@ class FakeConnection(BaseConnection):
         self.exit_requested = False
         self.opened = False
 
-        self.ResponseData = {b'\x10\x03': b'\x50\x03\x12\x23\x34\x45',
-                b'\x22\xf1\x90\xf1\x89\xf1\x91\xf8\x06\xf1\xa3': b'\x22\xf1\x90\xf1\x89\xf1\x91\xf8\x06\xf1\xa3',
-                b'\x10\x4f': b'\x50\x4f\x12\x23\x34\x45',
-                b'\x27\x03': b'\x67\x03\x12\x23\x34\x45',
-                b'\x27\x04\x12\x23\xa1\x88': b'\x67\x04',
-                b'\x2c\x03\xf2\x00': b'\x2c\x03\xf2\x00',
-                b'\x2c\x02\xf2\x00\x14\xd0\x01\xb3\xaa\x01\xd0\x01\x20\x22\x02\xd0\x01\x24\x00\x02\xd0\x00\xc3\x6e\x01\xd0\x00\xf3\x9a\x01\xd0\x01\x3f\xae\x02\xd0\x01\x1e\xee\x02\xd0\x01\x20\xc6\x02\xd0\x01\x43\xf6\x02\xd0\x01\x43\x1a\x02\xd0\x01\x3c\x76\x02\xd0\x01\x38\x24\x02\xd0\x01\x1b\x26\x02\xd0\x01\x36\x12\x02\xd0\x01\x1d\x8a\x02\xd0\x01\x1d\x96\x02\xd0\x01\x1e\x08\x02\xd0\x01\x1e\x04\x02\xd0\x01\x5c\x2c\x02\xd0\x01\x5c\x34\x02\xd0\x00\xc1\x77\x01\xd0\x00\xe6\x83\x01\xd0\x01\xde\x90\x01\xd0\x01\xde\x8e\x01\xd0\x01\xde\x8a\x01\xd0\x01\xde\x89\x01\xd0\x01\xde\x8d\x01\xd0\x00\xef\xb1\x01\xd0\x00\xef\xb2\x01\xd0\x00\xef\xb3\x01\xd0\x00\xef\xb4\x01\xd0\x00\xe5\x65\x01\xd0\x00\xe5\x66\x01\xd0\x00\xe5\x67\x01\xd0\x00\xe5\x68\x01\xd0\x01\x3e\x42\x02\xd0\x01\x1e\xfc\x02\xd0\x00\xc1\x79\x01\xd0\x01\x52\x2e\x02\xd0\x01\x51\x5c\x02\xd0\x01\x54\x44\x02\xd0\x01\x36\x00\x02\xd0\x01\x1d\xb2\x02\xd0\x01\x1e\xc0\x02\xd0\x00\x97\xe4\x04\xd0\x00\x98\x00\x04':b'\x62\xf2\x00',
-                b'\x22\xf2\x00': b'\x62\xf2\x00\x01\xd0\x01\xb3\xaa\x01\xd0\x01\x20\x22\x02\xd0\x01\x24\x00\x02\xd0\x00\xc3\x6e\x01\xd0\x00\xf3\x9a\x01\xd0\x01\x3f\xae\x02\xd0\x01\x1e\xee\x02\xd0\x01\x20\xc6\x02\xd0\x01\x43\xf6\x02\xd0\x01\x43\x1a\x02\xd0\x01\x3c\x76\x02\xd0\x01\x38\x24\x02\xd0\x01\x1b\x26\x02\xd0\x01\x36\x12\x02\xd0\x01\x1d\x8a\x02\xd0\x01\x1d\x96\x02\xd0\x01\x1e\x08\x02\xd0\x01\x1e\x04\x02\xd0\x01\x5c\x2c\x02'}
-
-
+        self.ResponseData = testdata
+        
     def open(self):
         self.opened = True
         self.logger.info('Fake Connection opened')
@@ -200,6 +204,7 @@ class FakeConnection(BaseConnection):
         self.logger.info('Fake Connection closed')
 
     def specific_send(self, payload):
+        self.logger.debug("Received payload: " + str(payload.hex()))
         self.rxqueue.put(self.ResponseData[payload])
 
     def specific_wait_frame(self, timeout=4):

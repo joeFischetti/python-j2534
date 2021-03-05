@@ -176,11 +176,11 @@ class J2534():
         return Error_ID(result), pDeviceID
     
     
-    def PassThruConnect(self, deviceID, protocol, baudrate, pChannelID = None):
+    def PassThruConnect(self, deviceID, protocol, baudrate, pChannelID = None, Flags = 0):
         if not pChannelID:
             pChannelID = c_ulong()
     
-        result = dllPassThruConnect(deviceID, protocol, 0, baudrate, byref(pChannelID))
+        result = dllPassThruConnect(deviceID, protocol, c_ulong(Flags), baudrate, byref(pChannelID))
         return Error_ID(result), pChannelID
     
     
@@ -280,10 +280,10 @@ class J2534():
         
         result = dllPassThruIoctl(Handle, c_ulong(IoctlID.value), byref(pInput), byref(pOutput))
         
-        #if ioctlInput:
-            
-        #    print("    pinput: " + str(inputParam.Value))
-        #    print("    result: " + str(Error_ID(result)))
+        if ioctlInput:
+            self.logger.debug("    pinput: " + str(Ioctl_Parameters(inputParam.Parameter)))
+            self.logger.debug("    pinput: " + str(inputParam.Value))
+            self.logger.debug("    result: " + str(Error_ID(result)))
 
         return Error_ID(result)
 
@@ -347,7 +347,7 @@ class J2534():
         #for i in range(0, len(self.txid)):
         #    msgPattern.Data[i] = self.txid[i]
 
-        result = dllPassThruStartMsgFilter(ChannelID, c_ulong(Filter.FLOW_CONTROL_FILTER.value), byref(msgMask), byref(msgPattern), byref(msgFlow), byref(msgID))
+        #result = dllPassThruStartMsgFilter(ChannelID, c_ulong(Filter.FLOW_CONTROL_FILTER.value), byref(msgMask), byref(msgPattern), byref(msgFlow), byref(msgID))
 
 
         return Error_ID(result)
