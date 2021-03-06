@@ -85,9 +85,11 @@ class J2534Connection(BaseConnection):
             self.result, self.channelID = self.interface.PassThruConnect(
                 self.devID, self.protocol.value, self.baudrate, Flags=flags
             )
+            print("Output of passthruconnect:  " + str(self.result))
             self.result = self.interface.PassThruStartMsgCANDUMPFilter(
                 self.channelID, self.protocol.value
             )
+            print("Output of candump message filter: " + str(self.result))
         else:
             flags = 0
 
