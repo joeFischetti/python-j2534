@@ -366,7 +366,7 @@ class J2534:
 
         result = dllPassThruStartMsgFilter(
             ChannelID,
-            c_ulong(Filter.FLOW_CONTROL_FILTER.value),
+            c_ulong(Filter.PASS_FILTER.value),
             byref(msgMask),
             byref(msgPattern),
             byref(c_ulong(0)),
