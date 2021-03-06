@@ -372,7 +372,7 @@ class J2534:
             byref(c_ulong(0)),
             byref(msgID),
         )
-
+        print(str(msgID))
         return Error_ID(result)
 
     def PassThruStartMsgFilter(self, ChannelID, protocol):
