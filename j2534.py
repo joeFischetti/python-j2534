@@ -373,6 +373,8 @@ class J2534:
             byref(msgID),
         )
 
+        return Error_ID(result)
+
     def PassThruStartMsgFilter(self, ChannelID, protocol):
 
         # VW Testing
