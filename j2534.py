@@ -335,7 +335,7 @@ class J2534:
 
         return Error_ID(result)
 
-    def PassThruStartMsgCANDUMPFilter(self, ChannelID, procotol):
+    def PassThruStartMsgCANDUMPFilter(self, ChannelID, protocol):
         txmsg = PASSTHRU_MSG()
         msgMask = PASSTHRU_MSG()
         msgPattern = PASSTHRU_MSG()
