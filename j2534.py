@@ -179,7 +179,7 @@ class J2534:
             c_ulong,
             POINTER(PASSTHRU_MSG),
             POINTER(PASSTHRU_MSG),
-            POINTER(PASSTHRU_MSG),
+            c_uvoid_p,
             POINTER(c_ulong),
         )
 
