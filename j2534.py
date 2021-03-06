@@ -369,7 +369,7 @@ class J2534:
             c_ulong(Filter.PASS_FILTER.value),
             byref(msgMask),
             byref(msgPattern),
-            POINTER(c_int)(),
+            POINTER(c_ulong)(),
             byref(msgID),
         )
         print(str(msgID))
